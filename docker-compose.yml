@@ -1,0 +1,20 @@
+services:
+  api:
+    build:
+      context: .                    # 프로젝트 루트
+      dockerfile: app/Dockerfile
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: apscheduler/Dockerfile
+    env_file: .env
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped

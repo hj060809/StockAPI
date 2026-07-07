@@ -1,0 +1,27 @@
+{
+  "name": "stock-api",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "runServices": [
+    "app"
+  ],
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "bash scripts/setup.sh",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "bruno-api-client.bruno"
+      ]
+    }
+  },
+  // Connect as non-root user (https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user)
+  "remoteUser": "vscode"
+}
