@@ -1,0 +1,2 @@
+2026-07-07 08:46:40.339 | ERROR    | worker.caller.yfinance_caller:_collect_one:96 - ZZZZINVALID9 1d collection failed: Invalid ISIN number: ZZZZINVALID9
+2026-07-07 08:47:15.407 | ERROR    | worker.caller.yfinance_caller:_collect_one:96 - ZZZZINVALID9 1d collection failed: Invalid ISIN number: ZZZZINVALID9

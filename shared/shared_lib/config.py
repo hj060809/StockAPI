@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     FMP_API_KEY: str
 
+    # 캔들 수집 크론 시각 (UTC) — 기본 05:30.
+    # 일봉의 기간은 미국 동부 자정(04:00~05:00 UTC)에 끝나므로, 그 직후에 돌아야
+    # 전일 캔들이 '확정'으로 판정되어 저장됨 (미확정 캔들은 저장하지 않는 정책)
+    COLLECT_CRON_HOUR: int = 5
+    COLLECT_CRON_MINUTE: int = 30
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @property

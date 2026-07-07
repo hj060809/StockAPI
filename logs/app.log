@@ -1,0 +1,74 @@
+2026-07-07 08:10:33.043 | INFO     | __main__:collect_candles_job:19 - 캔들 수집 job 시작
+2026-07-07 08:10:35.167 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: 전체 수집 3471행 저장
+2026-07-07 08:10:37.594 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - MSFT 1d: 전체 수집 10155행 저장
+2026-07-07 08:10:40.355 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: 전체 수집 11481행 저장
+2026-07-07 08:10:40.355 | INFO     | worker.caller.yfinance_caller:call:76 - 수집 완료: 대상 3건, 저장 25107행, 실패 0건
+2026-07-07 08:10:40.356 | INFO     | __main__:collect_candles_job:23 - 캔들 수집 job 종료
+2026-07-07 08:10:55.908 | INFO     | __main__:collect_candles_job:19 - 캔들 수집 job 시작
+2026-07-07 08:10:56.688 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: 증분 수집 1행 저장
+2026-07-07 08:10:56.734 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - MSFT 1d: 증분 수집 1행 저장
+2026-07-07 08:10:56.780 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: 증분 수집 1행 저장
+2026-07-07 08:10:56.780 | INFO     | worker.caller.yfinance_caller:call:76 - 수집 완료: 대상 3건, 저장 3행, 실패 0건
+2026-07-07 08:10:56.781 | INFO     | __main__:collect_candles_job:23 - 캔들 수집 job 종료
+2026-07-07 08:11:21.744 | INFO     | __main__:collect_candles_job:19 - 캔들 수집 job 시작
+2026-07-07 08:11:22.694 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: 증분 수집 1행 저장
+2026-07-07 08:11:22.881 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: 증분 수집 1행 저장
+2026-07-07 08:11:22.882 | INFO     | worker.caller.yfinance_caller:call:76 - 수집 완료: 대상 2건, 저장 2행, 실패 0건
+2026-07-07 08:11:22.882 | INFO     | __main__:collect_candles_job:23 - 캔들 수집 job 종료
+2026-07-07 08:12:01.736 | INFO     | __main__:main:39 - 스케줄러 시작 — 매일 21:30 UTC 캔들 수집
+2026-07-07 08:12:33.748 | INFO     | __main__:main:39 - 스케줄러 시작 — 매일 21:30 UTC 캔들 수집
+2026-07-07 08:24:14.889 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 08:24:15.547 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 08:24:15.602 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 08:24:15.652 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 08:24:15.652 | INFO     | worker.caller.yfinance_caller:call:76 - Collection done: 3 targets, 3 rows saved, 0 failed
+2026-07-07 08:24:15.653 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 08:35:47.112 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 08:35:47.782 | INFO     | worker.services.candle_service:save_candles:57 - AAPL 1h: purged 3443 rows past retention (7d)
+2026-07-07 08:35:47.782 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 08:35:47.902 | INFO     | worker.services.candle_service:save_candles:57 - AAPL 1d: purged 10731 rows past retention (1095d)
+2026-07-07 08:35:47.902 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 08:35:47.951 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 08:35:47.951 | INFO     | worker.caller.yfinance_caller:call:76 - Collection done: 3 targets, 3 rows saved, 0 failed
+2026-07-07 08:35:47.952 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 08:36:22.344 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 08:36:23.388 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 08:36:23.544 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 08:36:23.612 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 08:36:23.685 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - NVDA 1d: full collection, 19 rows saved
+2026-07-07 08:36:23.686 | INFO     | worker.caller.yfinance_caller:call:76 - Collection done: 4 targets, 22 rows saved, 0 failed
+2026-07-07 08:36:23.686 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 08:46:39.720 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 08:46:39.871 | WARNING  | worker.caller.yfinance_caller:call:68 - AAPL 4h: timeframe not supported by yfinance — skip
+2026-07-07 08:46:40.339 | ERROR    | worker.caller.yfinance_caller:_collect_one:96 - ZZZZINVALID9 1d collection failed: Invalid ISIN number: ZZZZINVALID9
+2026-07-07 08:46:40.370 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 08:46:40.441 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 08:46:40.497 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 08:46:40.497 | INFO     | worker.caller.yfinance_caller:call:76 - Collection done: 4 targets, 3 rows saved, 0 failed
+2026-07-07 08:46:40.497 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 08:47:14.774 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 08:47:14.953 | WARNING  | worker.caller.yfinance_caller:call:68 - AAPL 4h: timeframe not supported by yfinance — skip
+2026-07-07 08:47:15.407 | ERROR    | worker.caller.yfinance_caller:_collect_one:96 - ZZZZINVALID9 1d collection failed: Invalid ISIN number: ZZZZINVALID9
+2026-07-07 08:47:15.469 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 08:47:15.535 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 08:47:15.625 | INFO     | worker.caller.yfinance_caller:_collect_one:92 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 08:47:15.625 | INFO     | worker.caller.yfinance_caller:call:76 - Collection done: 4 targets, 3 rows saved, 1 failed
+2026-07-07 08:47:15.626 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 09:10:39.506 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 09:10:40.111 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 09:10:40.154 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 09:10:40.316 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 09:10:41.054 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1w: full collection, 2378 rows saved
+2026-07-07 09:10:41.054 | INFO     | worker.caller.yfinance_caller:call:78 - Collection done: 4 targets, 2381 rows saved, 0 failed
+2026-07-07 09:10:41.648 | INFO     | worker.services.action_service:save_actions:35 - AAPL: 96 new corporate actions saved
+2026-07-07 09:10:42.175 | INFO     | worker.services.action_service:save_actions:35 - MSFT: 99 new corporate actions saved
+2026-07-07 09:10:42.175 | INFO     | worker.caller.yfinance_caller:call:87 - Corporate actions done: 2 symbols, 195 new events, 0 failed
+2026-07-07 09:10:42.175 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 09:11:14.096 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 09:11:14.881 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 09:11:14.930 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1w: incremental collection, 1 rows saved
+2026-07-07 09:11:14.982 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 09:11:15.038 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 09:11:15.039 | INFO     | worker.caller.yfinance_caller:call:78 - Collection done: 4 targets, 4 rows saved, 0 failed
+2026-07-07 09:11:15.690 | INFO     | worker.caller.yfinance_caller:call:87 - Corporate actions done: 2 symbols, 0 new events, 0 failed
+2026-07-07 09:11:15.695 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
