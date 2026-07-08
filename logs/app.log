@@ -72,3 +72,20 @@
 2026-07-07 09:11:15.039 | INFO     | worker.caller.yfinance_caller:call:78 - Collection done: 4 targets, 4 rows saved, 0 failed
 2026-07-07 09:11:15.690 | INFO     | worker.caller.yfinance_caller:call:87 - Corporate actions done: 2 symbols, 0 new events, 0 failed
 2026-07-07 09:11:15.695 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 09:24:47.303 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 09:24:47.954 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 09:24:48.001 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 09:24:48.055 | INFO     | worker.caller.yfinance_caller:_collect_one:105 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 09:24:48.055 | INFO     | worker.caller.yfinance_caller:call:78 - Collection done: 3 targets, 3 rows saved, 0 failed
+2026-07-07 09:24:48.781 | INFO     | worker.caller.yfinance_caller:call:87 - Corporate actions done: 2 symbols, 0 new events, 0 failed
+2026-07-07 09:24:48.787 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-07 09:33:42.815 | INFO     | __main__:collect_candles_job:19 - Candle collection job started
+2026-07-07 09:33:44.065 | INFO     | worker.caller.yfinance_caller:call:75 - Corporate actions done: 2 symbols, 0 new events, 0 failed
+2026-07-07 09:33:44.241 | INFO     | worker.caller.yfinance_caller:_collect_one:106 - AAPL 1h: incremental collection, 1 rows saved
+2026-07-07 09:33:44.298 | INFO     | worker.caller.yfinance_caller:_collect_one:106 - AAPL 1d: incremental collection, 1 rows saved
+2026-07-07 09:33:44.388 | INFO     | worker.caller.yfinance_caller:_collect_one:106 - MSFT 1d: incremental collection, 1 rows saved
+2026-07-07 09:33:44.388 | INFO     | worker.caller.yfinance_caller:call:90 - Collection done: 3 targets, 3 rows saved, 0 failed
+2026-07-07 09:33:44.388 | INFO     | __main__:collect_candles_job:23 - Candle collection job finished
+2026-07-08 07:19:06.427 | WARNING  | worker.services.candle_service:_to_rows:120 - AAPL 1d: dropped 1 invalid rows (bad OHLCV)
+2026-07-08 07:50:35.259 | WARNING  | worker.services.candle_service:_to_rows:194 - AAPL 1d: dropped 1 invalid rows (bad OHLCV)
+2026-07-08 07:51:19.480 | WARNING  | worker.services.candle_service:_to_rows:194 - AAPL 1d: dropped 1 invalid rows (bad OHLCV)

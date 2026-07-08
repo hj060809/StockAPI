@@ -1,4 +1,17 @@
 services:
+  app:
+    profiles: ['devcontainer']
+    container_name: OCI-Service
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - .:/workspace:cached
+    tty: true
+    stdin_open: true
+    environment:
+      DEVCONTAINER: '1'
+
   api:
     build:
       context: .                    # 프로젝트 루트

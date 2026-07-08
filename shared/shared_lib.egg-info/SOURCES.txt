@@ -1,10 +1,15 @@
 pyproject.toml
 shared_lib/config.py
 shared_lib/database.py
+shared_lib/logger_config.py
 shared_lib.egg-info/PKG-INFO
 shared_lib.egg-info/SOURCES.txt
 shared_lib.egg-info/dependency_links.txt
 shared_lib.egg-info/top_level.txt
 shared_lib/models/__init__.py
+shared_lib/models/action_model.py
 shared_lib/models/base.py
+shared_lib/models/candle_model.py
+shared_lib/models/enums.py
 shared_lib/models/key_model.py
+shared_lib/models/ticker_model.py

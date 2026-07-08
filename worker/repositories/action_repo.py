@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
@@ -11,6 +12,20 @@ UPSERT_CHUNK_SIZE = 1_000
 class CorporateActionRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    async def get_splits_after(self, symbol: str, after: datetime) -> list[tuple[datetime, Decimal]]:
+        """after 이후 ex-date의 분할 이벤트 (time 오름차순) —
+        스케일 카나리아가 감지한 소급 수정을 설명하는 근거"""
+        result = await self.db.execute(
+            select(CorporateAction.time, CorporateAction.value)
+            .where(
+                CorporateAction.symbol == symbol,
+                CorporateAction.type == "split",
+                CorporateAction.time > after,
+            )
+            .order_by(CorporateAction.time)
+        )
+        return [(row[0], row[1]) for row in result.all()]
 
     async def get_last_time(self, symbol: str) -> datetime | None:
         """심볼의 마지막 기업행동 시각 — 증분 저장의 기준점"""

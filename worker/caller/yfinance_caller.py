@@ -1,5 +1,7 @@
 import asyncio
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 import pandas as pd
 import yfinance as yf
@@ -7,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import shared.shared_lib.logger_config  # noqa: F401 — loguru 핸들러 설정 적용
 from loguru import logger
+from worker.schemas.action_scheme import CorporateActionData
+from worker.schemas.candle_scheme import CandleData
 from worker.services.action_service import ActionService
 from worker.services.candle_service import CandleService, CollectionTask
 
@@ -60,14 +64,37 @@ class YFinanceCaller(CandleCaller):
         self._db_lock = asyncio.Lock()
 
     async def call(self):
-        """수집 계획 조회 → 티커별 병렬 fetch → 저장"""
+        """수집 계획 조회 → 기업행동 수집 → 티커별 병렬 캔들 fetch → 저장"""
         async with self._db_lock:
             plan = await self.service.get_collection_plan()
+
+        # 기업행동(배당/분할)을 캔들보다 먼저 수집 — 새 분할이 감지되면 기존 캔들의
+        # 스케일 재동기화가 선행돼야, 이어지는 증분(새 스케일)과 기존 행이 섞이지 않음
+        symbols = sorted({t.symbol for t in plan})
+        action_results = await asyncio.gather(
+            *[self._collect_actions_one(s) for s in symbols], return_exceptions=True
+        )
+        failed_symbols = {
+            s for s, r in zip(symbols, action_results) if not isinstance(r, int)
+        }
+        new_actions = sum(r for r in action_results if isinstance(r, int))
+        logger.info(
+            f"Corporate actions done: {len(symbols)} symbols, {new_actions} new events, {len(failed_symbols)} failed"
+        )
 
         tasks = []
         for task in plan:
             if task.timeframe not in YF_INTERVAL_MAP:
                 logger.warning(f"{task.symbol} {task.timeframe}: timeframe not supported by yfinance — skip")
+                continue
+            if task.symbol in failed_symbols:
+                # 기업행동 수집이 실패한 심볼은 이번 실행에서 캔들도 skip —
+                # 미감지 분할 상태로 증분(새 스케일)을 저장하면 다음 실행의
+                # apply_split이 그 행들을 한 번 더 조정(이중조정)하기 때문.
+                # 다음 실행에서 기업행동부터 자동 재시도됨
+                logger.warning(
+                    f"{task.symbol} {task.timeframe}: corporate actions failed — candle collection skipped"
+                )
                 continue
             tasks.append(self._collect_one(task))
 
@@ -77,31 +104,29 @@ class YFinanceCaller(CandleCaller):
         failed = sum(1 for r in results if not isinstance(r, int))
         logger.info(f"Collection done: {len(tasks)} targets, {total} rows saved, {failed} failed")
 
-        # 기업행동(배당/분할) 수집 — 수정주가 계산의 원천. 심볼 단위(타임프레임 무관)
-        symbols = sorted({t.symbol for t in plan})
-        action_results = await asyncio.gather(
-            *[self._collect_actions_one(s) for s in symbols], return_exceptions=True
-        )
-        new_actions = sum(r for r in action_results if isinstance(r, int))
-        action_failed = sum(1 for r in action_results if not isinstance(r, int))
-        logger.info(
-            f"Corporate actions done: {len(symbols)} symbols, {new_actions} new events, {action_failed} failed"
-        )
-
     async def _collect_one(self, task: CollectionTask) -> int | None:
         """티커 1개 수집 — 개별 실패는 로그 후 None 반환 (다음 실행에서 max(time) 기준 자동 복구)"""
         try:
             async with self._fetch_sem:
-                df = await asyncio.to_thread(self._fetch_history, task)
+                candles = await asyncio.to_thread(self._fetch_history, task)
 
-            if df.empty:
+            if not candles:
                 logger.warning(f"{task.symbol} {task.timeframe}: no data received")
+
+            # 스케일 카나리아 — 겹침 캔들로 소급 수정 감지. 분할이면 여기서 복구되고,
+            # 분할로 설명 안 되는 수정이면 전체 재수집으로 전환해 fetch 가능한 범위를 덮어씀
+            async with self._db_lock:
+                needs_full_refetch = await self.service.reconcile_scale(task, candles)
+            if needs_full_refetch:
+                logger.warning(f"{task.symbol} {task.timeframe}: refetching full history")
+                async with self._fetch_sem:
+                    candles = await asyncio.to_thread(self._fetch_history, replace(task, start=None))
 
             # 데이터가 없어도 보관 기간 purge는 수행돼야 하므로 save는 항상 호출
             async with self._db_lock:
-                saved = await self.service.save_candles(task, df)
+                saved = await self.service.save_candles(task, candles)
 
-            mode = "incremental" if task.start else "full"
+            mode = "incremental" if task.start and not needs_full_refetch else "full"
             logger.info(f"{task.symbol} {task.timeframe}: {mode} collection, {saved} rows saved")
             return saved
 
@@ -113,34 +138,23 @@ class YFinanceCaller(CandleCaller):
         """심볼 1개의 배당/분할 수집 — 개별 실패는 로그 후 None 반환"""
         try:
             async with self._fetch_sem:
-                df = await asyncio.to_thread(self._fetch_actions, symbol)
+                actions = await asyncio.to_thread(self._fetch_actions, symbol)
             async with self._db_lock:
-                return await self.action_service.save_actions(symbol, df)
+                return await self.action_service.save_actions(symbol, actions)
         except Exception as e:
             logger.error(f"{symbol} corporate actions collection failed: {e}")
             return None
 
     # ── sync 영역 (asyncio.to_thread에서 실행) ─────────────────
 
-    @staticmethod
-    def _fetch_actions(symbol: str) -> pd.DataFrame:
-        """yfinance actions → 표준 컬럼(time/dividends/stock splits), time은 UTC
+    @classmethod
+    def _fetch_actions(cls, symbol: str) -> list[CorporateActionData]:
+        """yfinance actions 조회 → CorporateActionData 목록.
         응답이 전체 히스토리라 증분 필터링은 service가 담당"""
         df = yf.Ticker(symbol).actions
-        if df is None or df.empty:
-            return pd.DataFrame()
+        return cls._to_actions(df)
 
-        df = df.reset_index()
-        df.columns = [c.lower() for c in df.columns]
-        df = df.rename(columns={"date": "time"})
-
-        if df["time"].dt.tz is None:
-            df["time"] = df["time"].dt.tz_localize("UTC")
-        else:
-            df["time"] = df["time"].dt.tz_convert("UTC")
-        return df
-
-    def _fetch_history(self, task: CollectionTask) -> pd.DataFrame:
+    def _fetch_history(self, task: CollectionTask) -> list[CandleData]:
         """증분: 마지막 캔들 시각부터(1개 겹쳐 재수집 — 미확정 캔들을 upsert로 보정)
         신규: 전체 히스토리(intraday는 yfinance 보존 기간 내 전체)
         티커에 retention_days가 있으면 그 범위 밖은 애초에 요청하지 않음 (가져와도 삭제 대상)"""
@@ -164,12 +178,12 @@ class YFinanceCaller(CandleCaller):
         if start is None:
             # 신규 티커 (일봉 이상) — 상장 이후 전체
             df = ticker.history(period="max", interval=interval, auto_adjust=False)
-            return self._normalize(df)
+            return self._to_candles(self._normalize(df))
 
         chunk = REQUEST_CHUNK.get(task.timeframe)
         if chunk is None:
             df = ticker.history(start=start, interval=interval, auto_adjust=False)
-            return self._normalize(df)
+            return self._to_candles(self._normalize(df))
 
         # 요청당 범위 제한이 있는 timeframe(1m)은 chunk 단위로 나눠서 수집
         frames = []
@@ -181,10 +195,14 @@ class YFinanceCaller(CandleCaller):
             if not df.empty:
                 frames.append(df)
             cursor += chunk
-        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        if not frames:
+            return []
+        return self._to_candles(pd.concat(frames, ignore_index=True))
 
-    @staticmethod
-    def _normalize(df: pd.DataFrame) -> pd.DataFrame:
+    # ── yfinance 응답 → DTO 변환 (외부 API 지식은 여기서 끝) ────
+
+    @classmethod
+    def _normalize(cls, df: pd.DataFrame) -> pd.DataFrame:
         """yfinance 응답 → 표준 컬럼(time/open/high/low/close/volume), time은 UTC"""
         if df.empty:
             return pd.DataFrame()
@@ -192,10 +210,57 @@ class YFinanceCaller(CandleCaller):
         df = df.reset_index()
         df.columns = [c.lower() for c in df.columns]
         df = df.rename(columns={"datetime": "time", "date": "time"})
-
-        if df["time"].dt.tz is None:
-            df["time"] = df["time"].dt.tz_localize("UTC")
-        else:
-            df["time"] = df["time"].dt.tz_convert("UTC")
-
+        df["time"] = cls._to_utc(df["time"])
         return df[["time", "open", "high", "low", "close", "volume"]]
+
+    @staticmethod
+    def _to_candles(df: pd.DataFrame) -> list[CandleData]:
+        """정규화된 DataFrame → CandleData 목록.
+        가격이 NaN인 행은 소스 결함으로 보고 드롭, volume NaN은 0으로 처리"""
+        if df.empty:
+            return []
+        df = df.dropna(subset=["open", "high", "low", "close"])
+        return [
+            CandleData(
+                time=t.to_pydatetime(),
+                open=Decimal(str(o)),
+                high=Decimal(str(h)),
+                low=Decimal(str(l)),
+                close=Decimal(str(c)),
+                volume=0 if pd.isna(v) else int(v),
+            )
+            for t, o, h, l, c, v in zip(
+                df["time"], df["open"], df["high"], df["low"], df["close"], df["volume"]
+            )
+        ]
+
+    @classmethod
+    def _to_actions(cls, df: pd.DataFrame | None) -> list[CorporateActionData]:
+        """yfinance actions DataFrame(dividends/stock splits) → CorporateActionData 목록.
+        값이 0/NaN이면 이벤트 아님. 같은 (time, type) 중복은 마지막 값 유지"""
+        if df is None or df.empty:
+            return []
+
+        df = df.reset_index()
+        df.columns = [c.lower() for c in df.columns]
+        df = df.rename(columns={"date": "time"})
+        df["time"] = cls._to_utc(df["time"])
+
+        dedup: dict[tuple[datetime, str], CorporateActionData] = {}
+        for _, row in df.iterrows():
+            for col, action_type in (("dividends", "dividend"), ("stock splits", "split")):
+                value = row.get(col)
+                if value is None or pd.isna(value) or value == 0:
+                    continue
+                time = row["time"].to_pydatetime()
+                dedup[(time, action_type)] = CorporateActionData(
+                    time=time, type=action_type, value=Decimal(str(value))
+                )
+        return list(dedup.values())
+
+    @staticmethod
+    def _to_utc(times: pd.Series) -> pd.Series:
+        """naive면 UTC로 간주해 localize, tz-aware면 UTC로 변환"""
+        if times.dt.tz is None:
+            return times.dt.tz_localize("UTC")
+        return times.dt.tz_convert("UTC")

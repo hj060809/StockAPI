@@ -1,6 +1,7 @@
 from datetime import datetime
+from decimal import Decimal
 
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, update, cast, BigInteger
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,13 +15,37 @@ class CandleRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_last_times(self) -> dict[tuple[str, str], datetime]:
-        """(symbol, timeframe)별 마지막 캔들 시각 — 증분 수집의 시작점 (단일 진실 소스)"""
+    async def get_last_candles(self) -> dict[tuple[str, str], tuple[datetime, Decimal]]:
+        """(symbol, timeframe)별 마지막 캔들의 (time, close) —
+        time은 증분 수집의 시작점(단일 진실 소스), close는 스케일 카나리아의 비교 기준값"""
         result = await self.db.execute(
-            select(Candle.symbol, Candle.timeframe, func.max(Candle.time))
-            .group_by(Candle.symbol, Candle.timeframe)
+            select(Candle.symbol, Candle.timeframe, Candle.time, Candle.close)
+            .distinct(Candle.symbol, Candle.timeframe)
+            .order_by(Candle.symbol, Candle.timeframe, Candle.time.desc())
         )
-        return {(row[0], row[1]): row[2] for row in result.all()}
+        return {(row[0], row[1]): (row[2], row[3]) for row in result.all()}
+
+    async def apply_split(self, symbol: str, timeframe: str, ex_time: datetime, ratio: Decimal) -> int:
+        """분할 스케일 재동기화 — ex-date 이전 캔들을 Yahoo의 소급 조정과 동일하게 변환
+        (가격 ÷비율, 거래량 ×비율). commit은 호출자 책임.
+        카나리아가 timeframe별 task에서 발동하므로 (symbol, timeframe) 단위로만 갱신 —
+        심볼 전체를 갱신하면 같은 심볼의 다른 timeframe task가 이중 적용하게 됨"""
+        result = await self.db.execute(
+            update(Candle)
+            .where(
+                Candle.symbol == symbol,
+                Candle.timeframe == timeframe,
+                Candle.time < ex_time,
+            )
+            .values(
+                open=Candle.open / ratio,
+                high=Candle.high / ratio,
+                low=Candle.low / ratio,
+                close=Candle.close / ratio,
+                volume=cast(func.round(Candle.volume * ratio), BigInteger),
+            )
+        )
+        return result.rowcount
 
     async def delete_before(self, symbol: str, timeframe: str, cutoff: datetime) -> int:
         """보관 기간을 벗어난 과거 캔들 삭제. commit은 호출자 책임 — 삭제 행 수 반환"""

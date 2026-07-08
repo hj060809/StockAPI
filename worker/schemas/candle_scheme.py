@@ -1,32 +1,18 @@
-from typing import Sequence
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
 
-from shared.shared_lib.models.enums import Timeframe
+@dataclass(frozen=True, slots=True)
+class CandleData:
+    """캔들 1개 — caller가 외부 API 응답을 정규화해 만드는 경계 DTO.
 
-class Candle:
-    def __init__(self,
-                 timestamp: int,
-                 open: float,
-                 high: float,
-                 low: float,
-                 close: float,
-                 volume: float
-                 ):
-        self.timestamp = timestamp
-        self.open = open
-        self.high = high
-        self.low = low
-        self.close = close
-        self.volume = volume
-
-
-class Chart:
-    def __init__(self, ticker: str, candles: Sequence[Candle], timeframe: Timeframe):
-        self.ticker = ticker
-        self.candles = candles
-        self.timeframe = timeframe
-
-    @property
-    def period(self) -> int:
-        if not self.candles:
-            return 0
-        return self.candles[-1].timestamp - self.candles[0].timestamp
+    외부 API(yfinance 등)에 대한 지식은 caller에서 끝나고,
+    service 이후 레이어는 이 타입만 바라본다.
+    time은 tz-aware UTC, 가격은 DB(Numeric)와 정밀도를 맞춘 Decimal.
+    """
+    time: datetime
+    open: Decimal
+    high: Decimal
+    low: Decimal
+    close: Decimal
+    volume: int

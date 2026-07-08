@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import key_router
+from app.api import key_router, candle_router
 from shared.shared_lib.config import settings
 
 # sk-dev--X5H-AKr3_pii5IlgaXBiVwP6
@@ -27,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(key_router.router, prefix="/api/keys", tags=["keys"])
+app.include_router(candle_router.router, prefix="/api/candles", tags=["candles"])
 
 @app.get("/health", tags=["health"])
 async def health_check():

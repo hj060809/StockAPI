@@ -5,6 +5,9 @@
   "runServices": [
     "app"
   ],
+  "mounts": [
+    "source=claude-home,target=/home/vscode/.claude,type=volume"
+  ],
   "workspaceFolder": "/workspace",
   "postCreateCommand": "bash scripts/setup.sh",
   "customizations": {
@@ -18,7 +21,8 @@
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-python.black-formatter",
-        "bruno-api-client.bruno"
+        "bruno-api-client.bruno",
+        "anthropic.claude-code"
       ]
     }
   },
